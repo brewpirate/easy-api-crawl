@@ -1,0 +1,21 @@
+# ide
+.idea
+.vscode
+
+# dependencies
+/node_modules
+
+# misc
+.DS_Store
+.env*
+
+# lock file
+package-lock.json
+
+# crawl output
+*.csv
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

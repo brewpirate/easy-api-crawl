@@ -83,10 +83,6 @@ function getQueuSize() {
     return userAgent.toString();
 }
 
-function getRandom(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-}   
-
 function getRandomRatelimit(min = 1000, max = 10000) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }

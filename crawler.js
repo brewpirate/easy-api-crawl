@@ -5,11 +5,15 @@ import csv from 'fast-csv';
 import getProxyList from './proxy.js';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 
+
+
 // User variables
+// TODO: YARGS!
 const baseUrl = 'https://ipinfo.io/?';
 const startId = 1;
 const endId   = 2;
 const goStealth = true;
+
 
 // Script Variables
 const payload = `${startId}-${endId}.csv`
@@ -20,7 +24,14 @@ let currentId = startId;
 let proxyList = [];
 
 
-// Crawler
+// START
+
+// Create Proxylist
+if (goStealth) {
+    await loadProxyList();
+}
+
+// Create Crawler
 const crawlerInstance = new Crawler({
     jQuery: false, 
     method: 'GET',
@@ -29,6 +40,8 @@ const crawlerInstance = new Crawler({
     retries: 0,
     retryTimeout: 0,
 
+    // Allow the ability to change the proxy and UserAgent for each request
+    //TODO: Use proxy for X number of requests
     preRequest: (options, done) => {
         const crawlerOptions = {
             rateLimit: getRandomRatelimit(),
@@ -38,11 +51,10 @@ const crawlerInstance = new Crawler({
         };
 
         if (goStealth) {
+            const crawlProxy = getRandomProxy();
+
             options.agentClass= SocksProxyAgent;
             options.strictSSL = true;
-            const crawlProxy = getRandomProxy();
-    
-    
             options.agentOptions = {
                 hostname: crawlProxy.host,
                 port: crawlProxy.port,
@@ -59,7 +71,8 @@ const crawlerInstance = new Crawler({
         } else {
             const formattedResponse = JSON.parse(res.body)[0];
             let message = 'No data found.'
-  
+            
+            // TODO: ALLOW FOR CUSTOM RESPONSE HANDLER
             if (formattedResponse !== undefined ){
                 if(!csvHeaders) {
                     console.log('setting headers')
@@ -79,14 +92,10 @@ const crawlerInstance = new Crawler({
     }
 });
 
-if (goStealth) {
-    await loadProxyList();
-}
 
 // Build Queue
 while (currentId < endId) {
     console.log(`${getQueuSize()} items to process`);
-
     crawlerInstance.queue(
         {
             uri: `${baseUrl}${currentId}`,
@@ -102,25 +111,31 @@ crawlerInstance.on('drain', () => {
     }
 });
 
+
+
+/**
+ * HELPERS 
+ * TODO: MOVE OUT OF CRAWLER
+ */
 async function loadProxyList() {
     proxyList = await getProxyList();
 }
 
-function getQueuSize() {
-    return crawlerInstance.queueSize;
-}
-
- function userAgent() {
-    const userAgent = new UserAgent({ deviceCategory: 'desktop' })
-    return userAgent.toString();
+function getRandomProxy() {
+    return proxyList[getRandom(1, proxyList.length)];
 }
 
 function getRandom(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }   
 
-function getRandomProxy() {
-     return proxyList[getRandom(1, proxyList.length)];
+function getQueuSize() {
+    return crawlerInstance.queueSize;
+}
+
+function userAgent() {
+    const userAgent = new UserAgent({ deviceCategory: 'desktop' })
+    return userAgent.toString();
 }
 
 function getRandomRatelimit(min = 1000, max = 10000) {

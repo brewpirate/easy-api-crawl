@@ -7,7 +7,7 @@
 
 # misc
 .DS_Store
-.env*
+.env
 
 # lock file
 package-lock.json
